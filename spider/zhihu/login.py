@@ -5,9 +5,12 @@ from http.cookiejar import LWPCookieJar
 import scrapy
 from selenium import webdriver
 from pickle import dump,load
-from selenium.webdriver.common.keys import Keys
+import json
 import os
-os.path.abspath(os.path.dirname(__file__))
+
+current_path = os.path.dirname(__file__)
+parent_path = os.path.abspath('..')
+
 
 path = os.path.join(os.path.abspath(".."),"data")
 COOKIE_FILE = path+'/cookie/cookies.pkl'
@@ -37,52 +40,46 @@ class ZhiHuLoginSpider(scrapy.Spider):
         #         # self.picture = None
 
     def parse(self, response):
-        print(response.body.decode("utf-8"))
-        pass
-
-    # 获取参数_xsrf
-    def get_xsrftoken(self):
-        response = requests.session().get("https://www.zhihu.com",headers = self.header)
-        return response.cookies['_xsrf']
-
-    #获取验证码
-    def get_captcha(self):
-        t = str(int(time.time()*1000))
-        captcha_url = 'http://www.zhihu.com/captcha.gif?r=' + t + "&type=login"
-        response = self.session.get(captcha_url, headers=self.headers)
-
+        # print(response.body.decode("utf-8"))
         pass
 
     def login(self):
+        self.load_cookie()
+        self.header['Cookie'] = self.load_cookie()
+        try:
+            r = requests.get("https://www.zhihu.com",headers = self.header)
+        except Exception as e:
+            print("cookie过期，重新登录")
+            self.get_cookie()
+            r = requests.get("https://www.zhihu.com",headers = self.header)
+        print(r.text)
         pass
 
     def get_cookie(self):
-        browser = webdriver.Chrome()
-        # browser = webdriver.Chrome(executable_path="./driver/chromedriver.exe")
+        # browser = webdriver.Chrome()
+        browser = webdriver.Chrome(executable_path="../driver/chromedriver.exe")
         browser.get("https://www.zhihu.com/signin")
         browser.find_element_by_name("username").send_keys("18614023195")
         browser.find_element_by_name("password").send_keys("123456abc")
-        #browser.find_element_by_class_name("SignFlow-submitButton").send_keys(Keys.ENTER)
+
         #登录以后再按回车
-        input("登录以后再按回车:")
+        input("扫码登录以后按回车:")
         cookies = browser.get_cookies()
-        print(cookies)
-        dump(cookies,open(COOKIE_FILE,'wb'))
+        cookies_json = json.dumps(cookies)
+        with open('cookies.json','w') as f:
+            f.write(cookies_json)
         browser.close()
+        return cookies_json
+
+    def load_cookie(self):
+        with open('cookies.json','r',encoding='utf-8') as f:
+            cookies_json = json.loads(f.read())
+        cookies = [item['name']+"="+item['value'] for item in cookies_json]
+        cookies = ';'.join(cookie for cookie in cookies)
         return cookies
 
 zhihu = ZhiHuLoginSpider()
-# zhihu.get_cookie()
-cookies = load(open(COOKIE_FILE, "rb"))
-agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
-headers = {
-    "Host":"www.zhihu.com",
-    "Referer":"https://www.zhihu.com",
-    "User-Agent":agent,
-    "Cookie":COOKIES
-}
-r = requests.get("https://www.zhihu.com",headers = headers)
-print(r.text)
+zhihu.login()
 
 
 
