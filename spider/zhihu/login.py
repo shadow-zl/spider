@@ -69,7 +69,6 @@ class ZhiHuLoginSpider(scrapy.Spider):
         with open('cookies.json','w') as f:
             f.write(cookies_json)
         browser.close()
-        return cookies_json
 
     def load_cookie(self):
         with open('cookies.json','r',encoding='utf-8') as f:
