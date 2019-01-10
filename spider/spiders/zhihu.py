@@ -21,6 +21,7 @@ class ZhihuSpider(scrapy.Spider):
     name = 'zhihu'
     allowed_domains = ['www.zhihu.com']
     start_urls = ['https://www.zhihu.com/']
+    start_answer_url= "https://www.zhihu.com/api/v4/questions/{0}/answers?include=data%5B%2A%5D.is_normal%2Cadmin_closed_comment%2Creward_info%2Cis_collapsed%2Cannotation_action%2Cannotation_detail%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Ccreated_time%2Cupdated_time%2Creview_info%2Crelevant_info%2Cquestion%2Cexcerpt%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cis_labeled%3Bdata%5B%2A%5D.mark_infos%5B%2A%5D.url%3Bdata%5B%2A%5D.author.follower_count%2Cbadge%5B%2A%5D.topics&limit={1}&offset={2}&platform=desktop&sort_by=default"
 
     def __init__(self):
         self.agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
@@ -45,13 +46,15 @@ class ZhihuSpider(scrapy.Spider):
             if re_url:
                 url = re_url.group(1)
                 question_id = re_url.group(2)
-                yield Request(url=url,headers=self.header,callback=self.parse_detail)
-            pass
+                yield Request(url=url,headers=self.header,callback=self.parse_question)
+            #下一页
+            #yield
+            #https://www.zhihu.com/api/v3/feed/topstory/recommend?page_number=1
 
-    def parse_detail(self,response):
+    def parse_question(self,response):
         question_loader = item_loader(item=items.ZhihuQuestionItem(),response=response)
-        # answer_loader = item_loader(item=items.ZhihuAnswerItem(),response=response)
-        question_loader.add_value('id',re.match(r'.*/(\d+).*',response.url).group(1))
+        question_id = re.match(r'.*/(\d+).*',response.url).group(1)
+        question_loader.add_value('id',question_id)
         question_loader.add_css('title','h1.QuestionHeader-title::text')
         question_loader.add_css('topics','.TopicLink div.Popover ::text')
         question_loader.add_css('content','span.RichText ztext[itemprop]::text')
@@ -59,8 +62,38 @@ class ZhihuSpider(scrapy.Spider):
         question_loader.add_value('url',response.url)
         question_loader.add_css('follower_num','button.Button.NumberBoard-item.Button--plain strong::attr(title)')
         question_loader.add_css('scan_num','div.NumberBoard-item strong::attr(title)')
-        item = question_loader.load_item()
-        yield item
+        question_item = question_loader.load_item()
+        yield Request(url = self.start_answer_url.format(question_id,5,0),headers=self.header,callback=self.parse_answer)
+        # print(question_item)
+        yield question_item
+
+    def parse_answer(self,response):
+        answer_response = json.loads(response.text)
+        totals = answer_response['paging']['totals']
+        next = answer_response['paging']['next']
+        data = answer_response['data']
+        for answer in data:
+            answer_item = items.ZhihuAnswerItem()
+            answer_item['id'] = answer['id']
+            answer_item['author_id'] = answer['author']['id']
+            answer_item['question_id'] = answer['question']['id']
+            answer_item['url'] = answer['url']
+            answer_item['content'] = answer['excerpt']
+            answer_item[''] = answer['']
+            answer_item[''] = answer['']
+            answer_item[''] = answer['']
+            answer_item[''] = answer['']
+
+
+
+
+            pass
+
+
+        if not answer_response['paging']['is_end']:
+            yield Request(url = next,headers=self.header,callback=self.parse_answer)
+        print(answer_response)
+        pass
 
     def login(self):
         self.header['Cookie'] =self.Cookie
