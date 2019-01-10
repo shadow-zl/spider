@@ -5,6 +5,7 @@
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/items.html
 
+from scrapy import Item
 import scrapy
 import datetime
 from scrapy.loader import ItemLoader
@@ -56,3 +57,25 @@ class AriticleItem(scrapy.Item):
     img_path = scrapy.Field()
     pass
 
+class ZhihuQuestionItem(Item):
+    id = scrapy.Field()
+    topics = scrapy.Field(output_processor = Join(','))
+    url = scrapy.Field()
+    title = scrapy.Field()
+    answer_num = scrapy.Field()
+    follower_num = scrapy.Field()
+    scan_num = scrapy.Field()
+    content = scrapy.Field()
+    pass
+
+class ZhihuAnswerItem(Item):
+    id = scrapy.Field()
+    author_id = scrapy.Field()
+    question_id = scrapy.Field()
+    url = scrapy.Field()
+    content = scrapy.Field()
+    priasie_num = scrapy.Field()
+    coment = scrapy.Field()
+    create_time = scrapy.Field()
+    update_time = scrapy.Field()
+    pass

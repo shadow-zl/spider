@@ -7,6 +7,9 @@ import scrapy
 from selenium import webdriver
 from scrapy.http import Request
 from urllib import parse
+import re
+from spider.items import item_loader
+from spider import items
 
 current_path = os.path.dirname(__file__)
 parent_path = os.path.abspath('..')
@@ -35,10 +38,29 @@ class ZhihuSpider(scrapy.Spider):
         yield Request("https://www.zhihu.com/",headers=self.header,cookies=self.Cookie,callback=self.parse)
 
     def parse(self, response):
-        print(response.text)
-        pass
-    def parse_detail(self):
-        pass
+        urls = response.css('a[data-za-detail-view-element_name]::attr(href)').extract()
+        for url in urls:
+            url = parse.urljoin(response.url,url)
+            re_url = re.match(r'(.*question/(\d+))(.*answer/\d+)', url)
+            if re_url:
+                url = re_url.group(1)
+                question_id = re_url.group(2)
+                yield Request(url=url,headers=self.header,callback=self.parse_detail)
+            pass
+
+    def parse_detail(self,response):
+        question_loader = item_loader(item=items.ZhihuQuestionItem(),response=response)
+        # answer_loader = item_loader(item=items.ZhihuAnswerItem(),response=response)
+        question_loader.add_value('id',re.match(r'.*/(\d+).*',response.url).group(1))
+        question_loader.add_css('title','h1.QuestionHeader-title::text')
+        question_loader.add_css('topics','.TopicLink div.Popover ::text')
+        question_loader.add_css('content','span.RichText ztext[itemprop]::text')
+        question_loader.add_css('answer_num','h4.List-headerText span::text')
+        question_loader.add_value('url',response.url)
+        question_loader.add_css('follower_num','button.Button.NumberBoard-item.Button--plain strong::attr(title)')
+        question_loader.add_css('scan_num','div.NumberBoard-item strong::attr(title)')
+        item = question_loader.load_item()
+        yield item
 
     def login(self):
         self.header['Cookie'] =self.Cookie
@@ -76,5 +98,4 @@ class ZhihuSpider(scrapy.Spider):
         with open('cookies.json','r',encoding='utf-8') as f:
             cookies_json = json.loads(f.read())
         return cookies_json
-
 
