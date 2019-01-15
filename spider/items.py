@@ -55,17 +55,33 @@ class AriticleItem(scrapy.Item):
     img_url = scrapy.Field()
     url = scrapy.Field()
     img_path = scrapy.Field()
-    pass
+
+    def sql(self):
+        sql = "insert into scrapy(title,url_md5,url,date,tags,img_url,praise,store,comment) values(%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+        params = (self['title'],self['url_md5'],self['url'],self['date'],self['tags'],self['img_url'],self['praise'],self['store'],self['comment'])
+        return sql,params
+
+
+def answer_process(answer_num):
+    if ',' in answer_num:
+        return answer_num.replace(',','')
+    else:
+        return answer_num
+
 
 class ZhihuQuestionItem(Item):
     id = scrapy.Field()
     topics = scrapy.Field(output_processor = Join(','))
     url = scrapy.Field()
     title = scrapy.Field()
-    answer_num = scrapy.Field()
+    answer_num = scrapy.Field(input_processor =MapCompose(answer_process))
     follower_num = scrapy.Field()
     scan_num = scrapy.Field()
     content = scrapy.Field()
+    def sql(self):
+        sql = "insert into zhihu(id,topics,url,title,answer_num,follower_num,scan_num) values(%s,%s,%s,%s,%s,%s,%s) "
+        params = (self['id'],self['topics'],self['url'],self['title'],self['answer_num'],self['follower_num'],self['scan_num'])
+        return sql,params
     pass
 
 class ZhihuAnswerItem(Item):
@@ -74,8 +90,10 @@ class ZhihuAnswerItem(Item):
     question_id = scrapy.Field()
     url = scrapy.Field()
     content = scrapy.Field()
-    priasie_num = scrapy.Field()
-    coment = scrapy.Field()
-    create_time = scrapy.Field()
-    update_time = scrapy.Field()
+    voteup_count = scrapy.Field()
+    comment_count = scrapy.Field()
+    def sql(self):
+        sql = "insert into zhihu_answer(id,author_id,question_id,url,content,voteup_count,comment_count) values(%s,%s,%s,%s,%s,%s,%s) "
+        params = (self['id'],self['author_id'],self['question_id'],self['url'],self['content'],self['voteup_count'],self['comment_count'])
+        return sql,params
     pass

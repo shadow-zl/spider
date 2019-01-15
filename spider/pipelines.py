@@ -9,6 +9,7 @@ from twisted.enterprise import adbapi
 from MySQLdb.cursors import DictCursor
 
 
+
 class ArticlePipeline(object):
     def process_item(self, item, spider):
         return item
@@ -79,6 +80,16 @@ class MysqlAsynPipeline(object):
     def handle_error(self,failure):
         print(failure)
 
+
     def insert(self,tx,item):
-        sql = "insert into scrapy(title,url_md5,url,date,tags,img_url,praise,store,comment) values(%s,%s,%s,%s,%s,%s,%s,%s,%s) "
-        tx.execute(sql,(item['title'],item['url_md5'],item['url'],item['date'],item['tags'],item['img_url'],item['praise'],item['store'],item['comment']))
+        sql,params = item.sql()
+        tx.execute(sql,params)
+
+
+
+class ZhiHuPipeline(object):
+    def process_item(self, item, spider):
+        with open('answer.txt','a',encoding='utf-8') as f:
+            f.write((str(item['question_id'])+item['content']))
+            f.write("\n")
+        return item
