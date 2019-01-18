@@ -97,3 +97,36 @@ class ZhihuAnswerItem(Item):
         params = (self['id'],self['author_id'],self['question_id'],self['url'],self['content'],self['voteup_count'],self['comment_count'])
         return sql,params
     pass
+
+def strip(value):
+    if "/" in value:
+        value = value.replace("/","")
+    if "-" in value:
+        value = value.replace("-","")
+    return "".join(value.split())
+
+def work_addr_processor(value):
+    if "地图" not in value:
+        return value
+
+
+
+class LagouItem(Item):
+    title = scrapy.Field()
+    url = scrapy.Field()
+    url_md5_id = scrapy.Field()
+    salary = scrapy.Field()
+    job_city = scrapy.Field(input_processor = MapCompose(strip))
+    work_year = scrapy.Field(input_processor = MapCompose(strip))
+    degree_need = scrapy.Field(input_processor = MapCompose(strip))
+    job_type = scrapy.Field()
+    publish_time = scrapy.Field(input_processor = MapCompose(strip))
+    job_advantage = scrapy.Field()
+    job_desc = scrapy.Field(input_processor = MapCompose(strip))
+    work_addr = scrapy.Field(input_processor = MapCompose(work_addr_processor),output_processor =Join("-"))
+    work_addr_detail = scrapy.Field(input_processor = MapCompose(strip),output_processor =Join("") )
+    company_url = scrapy.Field()
+    company_name = scrapy.Field(input_processor = MapCompose(strip))
+    tags = scrapy.Field(input_processor = MapCompose(strip),output_processor =Join(""))
+    pass
+

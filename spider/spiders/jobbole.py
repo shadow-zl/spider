@@ -6,8 +6,6 @@ from urllib import parse
 import sys
 from spider.items import AriticleItem
 from spider.utils.common import md5
-import datetime
-from scrapy.loader import ItemLoader
 from spider.items import item_loader
 sys.setrecursionlimit(1000000)
 

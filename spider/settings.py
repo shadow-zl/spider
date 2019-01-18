@@ -69,7 +69,7 @@ ITEM_PIPELINES = {
    # 'spider.pipelines.ArticlePipeline': 300,
    # 'spider.pipelines.ImagePipeline': 1,
    # 'spider.pipelines.JsonItemExporterPipeline': 2,
-    'spider.pipelines.MysqlAsynPipeline': 1
+   #  'spider.pipelines.MysqlAsynPipeline': 1
    # 'scrapy.pipelines.images.ImagesPipeline': 1,
    #   'spider.pipelines.ZhiHuPipeline': 1
 
