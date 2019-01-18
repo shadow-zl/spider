@@ -6,4 +6,7 @@ gen
 *.MD
 /Log/
 /target/
+/__pycache__/
+*.pyc
+
 
