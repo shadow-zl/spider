@@ -3,7 +3,6 @@
 *.iml
 out
 gen
-*.MD
 /Log/
 /target/
 /__pycache__/
