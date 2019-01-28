@@ -80,7 +80,6 @@ class MysqlAsynPipeline(object):
     def handle_error(self,failure):
         print(failure)
 
-
     def insert(self,tx,item):
         sql,params = item.sql()
         tx.execute(sql,params)

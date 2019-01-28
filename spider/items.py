@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://doc.scrapy.org/en/latest/topics/items.html
-
 from scrapy import Item
 import scrapy
 import datetime
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose,TakeFirst,Join
 import re
+from w3lib.html import remove_tags
 #点赞，评论处理
 def num_processor(num):
     if re.match(r'.*?(\d+).*',num):
@@ -106,27 +101,41 @@ def strip(value):
     return "".join(value.split())
 
 def work_addr_processor(value):
-    if "地图" not in value:
-        return value
-
-
+    addrs = value.split("\n")
+    addrs = [addr.strip() for addr in addrs if "查看地图" not in addr and len(addr.strip())>0]
+    return "".join(addrs)
 
 class LagouItem(Item):
     title = scrapy.Field()
     url = scrapy.Field()
     url_md5_id = scrapy.Field()
     salary = scrapy.Field()
-    job_city = scrapy.Field(input_processor = MapCompose(strip))
-    work_year = scrapy.Field(input_processor = MapCompose(strip))
-    degree_need = scrapy.Field(input_processor = MapCompose(strip))
+    job_city = scrapy.Field(
+        input_processor = MapCompose(strip)
+    )
+    work_year = scrapy.Field(
+        input_processor = MapCompose(strip)
+    )
+    degree_need = scrapy.Field(
+        input_processor = MapCompose(strip)
+    )
     job_type = scrapy.Field()
-    publish_time = scrapy.Field(input_processor = MapCompose(strip))
+    publish_time = scrapy.Field(
+        input_processor = MapCompose(strip)
+    )
     job_advantage = scrapy.Field()
-    job_desc = scrapy.Field(input_processor = MapCompose(strip))
-    work_addr = scrapy.Field(input_processor = MapCompose(work_addr_processor),output_processor =Join("-"))
-    work_addr_detail = scrapy.Field(input_processor = MapCompose(strip),output_processor =Join("") )
+    job_desc = scrapy.Field(
+        input_processor = MapCompose(strip)
+    )
+    work_addr = scrapy.Field(
+        input_processor = MapCompose(remove_tags,work_addr_processor)
+        # output_processor =Join("*")
+    )
     company_url = scrapy.Field()
     company_name = scrapy.Field(input_processor = MapCompose(strip))
-    tags = scrapy.Field(input_processor = MapCompose(strip),output_processor =Join(""))
+    tags = scrapy.Field(
+        input_processor = MapCompose(strip),
+        output_processor =Join("")
+    )
     pass
 

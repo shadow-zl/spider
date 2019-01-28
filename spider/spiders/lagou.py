@@ -39,8 +39,8 @@ class LagouSpider(CrawlSpider):
         with open(path,'r',encoding="utf-8") as f:
             return json.loads(f.read())
 
-    # def start_requests(self):
-    #     yield Request(url = "https://www.lagou.com",cookies=self.cookie,headers=self.headers)
+    def start_requests(self):
+        yield Request(url = "https://www.lagou.com",cookies=self.cookie,headers=self.headers)
 
     rules = (
         # Rule(LinkExtractor(allow=r'jobs/\d+.html'), callback='parse_item', follow=True),
@@ -48,11 +48,13 @@ class LagouSpider(CrawlSpider):
         Rule(LinkExtractor(allow=r'zhaopin/.*'), callback='parse_item', follow=True),
     )
     def parse_item(self, response):
+        print(response.url)
         job_urls = response.css("a.position_link::attr(href)").extract()
         for job_url in job_urls:
             yield Request(url=job_url, headers=self.headers,callback=self.parse_job)
 
     def parse_job(self,response):
+        # print(response.url)
         lagou_loader = item_loader(item=items.LagouItem(),response=response)
         lagou_loader.add_css("title","div.job-name::attr(title)")
         lagou_loader.add_value("url",response.url)
@@ -65,13 +67,12 @@ class LagouSpider(CrawlSpider):
         lagou_loader.add_css("publish_time",".publish_time::text")
         lagou_loader.add_css("job_advantage","span.advantage + p::text")
         lagou_loader.add_css("job_desc",".job_bt div.job-detail")
-        lagou_loader.add_css("work_addr","div.work_addr a::text")
-        lagou_loader.add_css("work_addr_detail", "div.work_addr::text")
+        lagou_loader.add_css("work_addr","div.work_addr")
         lagou_loader.add_css("company_url","dl.job_company dt a::attr(href)")
         lagou_loader.add_css("company_name","dl.job_company dt a div h2::text")
         lagou_loader.add_css("tags","ul.position-label.clearfix li::text")
         lagou_item = lagou_loader.load_item()
-        print(lagou_item)
+        # print(lagou_item)
         pass
         #i = {}
         #return i
